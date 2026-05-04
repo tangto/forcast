@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>智能多Agent订货系统 | 长链推理 + 多Agent协作演示</title>
+    <!-- 引入 Google Fonts 提升阅读体验 -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <!-- 简单的 Font Awesome 6 免费图标库 (用于视觉点缀) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f5f7fb;
+            color: #1e293b;
+            line-height: 1.5;
+            padding: 2rem 1rem;
+        }
+
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 2rem;
+            box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            padding: 2rem 2rem 3rem;
+        }
+
+        /* 头部区域 */
+        .hero {
+            text-align: center;
+            margin-bottom: 3rem;
+            border-bottom: 2px solid #eef2ff;
+            padding-bottom: 2rem;
+        }
+
+        .hero h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #1E3A8A, #3B82F6);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            letter-spacing: -0.02em;
+            margin-bottom: 0.5rem;
+        }
+
+        .hero .badge {
+            display: inline-block;
+            background: #eef2ff;
+            color: #1e40af;
+            padding: 0.25rem 1rem;
+            border-radius: 30px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            margin-top: 0.75rem;
+        }
+
+        .hero p {
+            color: #475569;
+            max-width: 700px;
+            margin: 1rem auto 0;
+            font-size: 1.05rem;
+        }
+
+        /* KPI 卡片行 */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .kpi-card {
+            background: #f8fafc;
+            border-radius: 1.5rem;
+            padding: 1.5rem 1rem;
+            text-align: center;
+            transition: all 0.2s;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+            border: 1px solid #e9eef3;
+        }
+
+        .kpi-card i {
+            font-size: 2.2rem;
+            color: #3b82f6;
+            margin-bottom: 0.5rem;
+        }
+
+        .kpi-number {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #0f172a;
+            line-height: 1.2;
+        }
+
+        .kpi-label {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+            color: #475569;
+            margin-top: 0.5rem;
+        }
+
+        .trend-up {
+            color: #10b981;
+            font-size: 0.8rem;
+            font-weight: 500;
+            margin-left: 0.25rem;
+        }
+
+        /* 章节通用样式 */
+        .section {
+            margin-bottom: 3rem;
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            font-size: 1.7rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            border-left: 5px solid #3b82f6;
+            padding-left: 1rem;
+        }
+
+        .section-title i {
+            color: #3b82f6;
+            font-size: 1.5rem;
+        }
+
+        .two-columns {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        /* 痛点卡片 */
+        .pain-points {
+            background: #fef9e3;
+            border-left: 4px solid #f59e0b;
+            padding: 1.25rem;
+            border-radius: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        /* 推理步骤 (时间线 style) */
+        .reasoning-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 0.9rem;
+        }
+
+        .step-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 1rem;
+            padding: 1rem;
+            transition: 0.1s;
+        }
+
+        .step-num {
+            background: #3b82f6;
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 40px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .step-content {
+            flex: 1;
+        }
+
+        .step-title {
+            font-weight: 700;
+            margin-bottom: 0.2rem;
+        }
+
+        .step-desc {
+            font-size: 0.85rem;
+            color: #334155;
+        }
+
+        /* 表格简约样式 */
+        .agent-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #f9fafc;
+            border-radius: 1rem;
+            overflow: hidden;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        .agent-table th {
+            background: #eef2ff;
+            padding: 0.8rem;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .agent-table td {
+            padding: 0.8rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .tech-tag {
+            display: inline-block;
+            background: #e2e8f0;
+            padding: 0.2rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            margin: 0.2rem 0.3rem;
+        }
+
+        /* 成果指标卡 */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        .metric-compare {
+            background: #f1f5f9;
+            border-radius: 1rem;
+            padding: 1rem;
+        }
+
+        .metric-bar {
+            background: #cbd5e1;
+            border-radius: 20px;
+            height: 8px;
+            width: 100%;
+            margin: 0.5rem 0;
+        }
+
+        .metric-bar-fill {
+            background: #3b82f6;
+            height: 8px;
+            border-radius: 20px;
+            width: 0%;
+        }
+
+        /* 响应式 */
+        @media (max-width: 800px) {
+            .container {
+                padding: 1.5rem;
+            }
+            .two-columns {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+            .hero h1 {
+                font-size: 1.8rem;
+            }
+            .section-title {
+                font-size: 1.4rem;
+            }
+        }
+
+        footer {
+            margin-top: 2rem;
+            text-align: center;
+            font-size: 0.75rem;
+            color: #94a3b8;
+            border-top: 1px solid #eef2ff;
+            padding-top: 2rem;
+        }
+        .highlight {
+            background: linear-gradient(120deg, #e0f2fe 0%, #e0f2fe 40%, transparent 80%);
+            padding: 0 0.2rem;
+            font-weight: 500;
+        }
+        .note {
+            background: #eff6ff;
+            padding: 1rem;
+            border-radius: 1rem;
+            margin-top: 1rem;
+            font-size: 0.85rem;
+            border-left: 4px solid #2563eb;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <!-- Hero 区域 -->
+    <div class="hero">
+        <h1>🤖 智能多 Agent 订货系统</h1>
+        <div class="badge">长链推理 · 多智能体协作 · 生产级落地</div>
+        <p>基于预测、安全库存与订货节奏Agent，解决千店×万SKU下的缺货与报损矛盾</p>
+    </div>
+
+    <!-- KPI 关键结果 -->
+    <div class="kpi-grid">
+        <div class="kpi-card">
+            <i class="fas fa-chart-line"></i>
+            <div class="kpi-number">-41%</div>
+            <div class="kpi-label">缺货率下降</div>
+            <span class="trend-up"><i class="fas fa-arrow-down"></i> 8.2% → 4.8%</span>
+        </div>
+        <div class="kpi-card">
+            <i class="fas fa-dollar-sign"></i>
+            <div class="kpi-number">-27%</div>
+            <div class="kpi-label">报损成本降低</div>
+            <span class="trend-up">每月节省 ≈33万</span>
+        </div>
+        <div class="kpi-card">
+            <i class="fas fa-store"></i>
+            <div class="kpi-number">1,200</div>
+            <div class="kpi-label">覆盖门店</div>
+            <span class="trend-up">35万 SPU</span>
+        </div>
+        <div class="kpi-card">
+            <i class="fas fa-clock"></i>
+            <div class="kpi-number">-82%</div>
+            <div class="kpi-label">人工工时降低</div>
+            <span class="trend-up">280 → 49 人天/周</span>
+        </div>
+    </div>
+
+    <!-- 痛点+目标 双栏 -->
+    <div class="two-columns">
+        <div>
+            <div class="section-title"><i class="fas fa-exclamation-triangle"></i>核心痛点</div>
+            <div class="pain-points">
+                <i class="fas fa-tshirt" style="margin-right: 8px;"></i> <strong>订货偏差 = 真实损失</strong><br>
+                订货量 > 需求 → <span class="highlight">报损</span>（成本浪费）<br>
+                订货量 < 需求 → <span class="highlight">缺货</span>（丢失销售机会、客户流失）<br>
+                传统人工无法应对 <strong>数十万SKU × 千家门店</strong> 的组合爆炸。
+            </div>
+            <div class="pain-points" style="background:#eef2ff; border-left-color:#3b82f6;">
+                <i class="fas fa-bullseye"></i> <strong>核心目标</strong><br>
+                在降低报损的同时，将缺货率稳定控制在5%以内，实现动态精准补货。
+            </div>
+        </div>
+        <div>
+            <div class="section-title"><i class="fas fa-cogs"></i>架构亮点</div>
+            <ul style="list-style-type: none;">
+                <li style="margin-bottom: 12px;">✅ <strong>长链推理</strong> — 6步推理链路，多阶段决策</li>
+                <li style="margin-bottom: 12px;">✅ <strong>多Agent协作</strong> — 并行预测+并行安全库存+节奏整合+异常仲裁</li>
+                <li style="margin-bottom: 12px;">✅ <strong>防幻觉机制</strong> — LLM仅用于自然语言解释，不参与数值订货</li>
+                <li style="margin-bottom: 12px;">✅ <strong>规则仲裁模块</strong> — 保障库存周转不低于红线</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- 长链推理 6步骤 -->
+    <div class="section">
+        <div class="section-title"><i class="fas fa-link"></i>长链推理 (6步完整推理链路)</div>
+        <div class="reasoning-steps">
+            <div class="step-item"><div class="step-num">①</div><div class="step-content"><div class="step-title">数据清洗模块</div><div class="step-desc">清洗历史销售、退货、剔除促销异常点 → 干净时序数据</div></div></div>
+            <div class="step-item"><div class="step-num">②</div><div class="step-content"><div class="step-title">预测 Agent</div><div class="step-desc">基于 LightGBM/Prophet 输出 T+14 日基准需求量（每个门店-SKU）</div></div></div>
+            <div class="step-item"><div class="step-num">③</div><div class="step-content"><div class="step-title">安全库存 Agent</div><div class="step-desc">需求标准差 σ × 服务水平系数(z=1.96) × √提前期 → 每日安全库存量</div></div></div>
+            <div class="step-item"><div class="step-num">④</div><div class="step-content"><div class="step-title">订货节奏 Agent</div><div class="step-desc">聚合预测+安全库存，减去当前库存和在途，按配送日历/最小包装倍数计算初步订货量</div></div></div>
+            <div class="step-item"><div class="step-num">⑤</div><div class="step-content"><div class="step-title">规则仲裁模块</div><div class="step-desc">当预测+安全导致周转天数<7天时，强制执行保底系数，避免过度压货</div></div></div>
+            <div class="step-item"><div class="step-num">⑥</div><div class="step-content"><div class="step-title">异常检测 Agent</div><div class="step-desc">校验最终订货量是否超过历史3σ阈值或小于0，拦截明显异常值</div></div></div>
+        </div>
+        <div class="note">
+            <i class="fas fa-brain"></i> 长链推理特征：全部步骤超过5个推理阶段，且每一步的输出都作为下一步的条件输入，形成深度决策流。
+        </div>
+    </div>
+
+    <!-- 多 Agent 协作表 -->
+    <div class="section">
+        <div class="section-title"><i class="fas fa-users"></i>多 Agent 协作机制</div>
+        <table class="agent-table">
+            <thead>
+                <tr><th>Agent</th><th>职责</th><th>运行方式</th><th>输出格式</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><strong>预测 Agent</strong></td><td>时序模型预测T+14需求量</td><td>并行(无状态)</td><td>{store_id, sku, date, pred_qty}</td></tr>
+                <tr><td><strong>安全库存 Agent</strong></td><td>基于波动 & 服务水平计算安全库存</td><td>并行(依赖统计)</td><td>{store_id, sku, date, safety_stock}</td></tr>
+                <tr><td><strong>订货节奏 Agent</strong></td><td>聚合 + 库存抵消 + 配送规则</td><td>串行等待前两者</td><td>{order_qty, order_date}</td></tr>
+                <tr><td><strong>异常检测 Agent</strong></td><td>最终校验与告警</td><td>串行最后一步</td><td>{approved: bool, reason}</td></tr>
+            </tbody>
+        </table>
+        <div class="note" style="margin-top: 1rem;">
+            <i class="fas fa-gavel"></i> <strong>冲突解决</strong>：当“预测+安全库存”组合导致库存周转天数下降过快（<7天），<strong>规则仲裁模块</strong>（非LLM）强制执行保底系数0.8，优先保障服务水平。
+        </div>
+    </div>
+
+    <!-- 技术实现 & 成果数据混合 -->
+    <div class="two-columns">
+        <!-- 左侧技术栈 -->
+        <div>
+            <div class="section-title"><i class="fas fa-microchip"></i>技术实现要点</div>
+            <div style="background:#f8fafc; border-radius: 1rem; padding: 1.2rem;">
+                <p><i class="fab fa-python"></i> <strong>Python 3.10</strong> + Celery + Redis 分布式任务分片</p>
+                <p><i class="fas fa-chart-simple"></i> 时序模型：LightGBM / Prophet (按SKU类别自动选择)</p>
+                <p><i class="fas fa-shield-alt"></i> 安全库存公式：动态 z-score (服务水平 95%)</p>
+                <p><i class="fas fa-project-diagram"></i> 自研 DAG 引擎（并行 + 串行依赖编排）</p>
+                <p><i class="fas fa-robot"></i> <span class="highlight">LLM 仅用于异常告警解释 + 自然语言建议</span>（不参与订货数值，防幻觉）</p>
+                <p><i class="fas fa-cloud-upload-alt"></i> 每日凌晨2点全量计算，覆盖210万+订单行</p>
+                <div style="margin-top: 1rem;">
+                    <span class="tech-tag">Docker</span>
+                    <span class="tech-tag">Redis</span>
+                    <span class="tech-tag">PostgreSQL</span>
+                    <span class="tech-tag">时序数据库</span>
+                </div>
+            </div>
+        </div>
+        <!-- 右侧成果对比 -->
+        <div>
+            <div class="section-title"><i class="fas fa-chart-simple"></i>关键成果对比</div>
+            <div class="metrics-grid">
+                <div class="metric-compare">
+                    <div>缺货率</div>
+                    <div style="display: flex; justify-content: space-between;"><span>上线前 8.2%</span><span>上线后 4.8%</span></div>
+                    <div class="metric-bar"><div class="metric-bar-fill" style="width: 58%; background: #ef4444;"></div></div>
+                    <div class="metric-bar"><div class="metric-bar-fill" style="width: 34%; background: #10b981;"></div></div>
+                    <span class="trend-up"><i class="fas fa-arrow-down"></i> 相对降幅41%</span>
+                </div>
+                <div class="metric-compare">
+                    <div>报损成本 (万元/月)</div>
+                    <div style="display: flex; justify-content: space-between;"><span>前: 123</span><span>后: 89.8</span></div>
+                    <div class="metric-bar"><div class="metric-bar-fill" style="width: 100%; background: #f97316;"></div></div>
+                    <div class="metric-bar"><div class="metric-bar-fill" style="width: 73%; background: #10b981;"></div></div>
+                    <span class="trend-up"><i class="fas fa-arrow-down"></i> 降幅27%</span>
+                </div>
+                <div class="metric-compare">
+                    <div>库存周转天数</div>
+                    <div>32天 → 26天 <i class="fas fa-arrow-down trend-up"></i> 提升18%效率</div>
+                    <div class="metric-bar"><div class="metric-bar-fill" style="width: 100%; background: #64748b;"></div></div>
+                    <div class="metric-bar"><div class="metric-bar-fill" style="width: 81%; background: #3b82f6;"></div></div>
+                </div>
+                <div class="metric-compare">
+                    <div>订货人工工时(人天/周)</div>
+                    <div>280 → 49 <i class="fas fa-arrow-down trend-up"></i> -82%</div>
+                    <div class="metric-bar"><div class="metric-bar-fill" style="width: 100%; background: #8b5cf6;"></div></div>
+                    <div class="metric-bar"><div class="metric-bar-fill" style="width: 17%; background: #10b981;"></div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 增加一个案例推理演示 -->
+    <div class="section">
+        <div class="section-title"><i class="fas fa-microscope"></i>实例追踪：单个门店-SKU推理示例</div>
+        <div style="background: #f1f9fe; border-radius: 1rem; padding: 1rem; overflow-x: auto;">
+            <table style="width:100%; border-collapse: collapse; font-size: 0.85rem;">
+                <thead><tr style="background:#d9e8f7;"><th>步骤</th><th>模块</th><th>输入/计算</th><th>输出值</th></tr></thead>
+                <tbody>
+                    <tr><td>①</td><td>清洗</td><td>剔除促销期异常点</td><td>日销量 [12,13,9,10,11]</td></tr>
+                    <tr><td>②</td><td>预测Agent</td><td>过去60天历史</td><td>T+14日均需求 = 13</td></tr>
+                    <tr><td>③</td><td>安全库存Agent</td><td>σ=3.2, L=3天, z=1.96</td><td>安全库存 = 11</td></tr>
+                    <tr><td>④</td><td>订货节奏Agent</td><td>当前库存=8, 在途=5</td><td>初步订货 = 13+11-8-5=11</td></tr>
+                    <tr><td>⑤</td><td>规则仲裁模块</td><td>最小包装倍数=6</td><td>最终订货量 = 12 (向上取整)</td></tr>
+                    <tr><td>⑥</td><td>异常检测Agent</td><td>历史订单量最大30</td><td>✅ 通过</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 风险与可靠性说明 -->
+    <div class="note" style="background: #ecfdf5; border-left-color: #10b981;">
+        <i class="fas fa-check-circle"></i> <strong>可靠性保障</strong>：所有 Agent 输出的订货建议经过规则过滤器（订货量不得超过过去3个月日均销量3倍），并保留人工复核界面。系统上线后缺货率稳定下降，无重大幻觉或运算事故。
+    </div>
+
+    <footer>
+        ⚡ 生产级系统 · 长链推理 + 多Agent协作 · 每天处理1200门店×35万SPU<br>
+        LLM仅用于生成自然语言解释与异常告警，数值决策基于确定模型 + 业务规则，杜绝幻觉风险。
+    </footer>
+</div>
+</body>
+</html>
